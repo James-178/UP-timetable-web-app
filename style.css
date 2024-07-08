@@ -1,0 +1,157 @@
+  #timetable {
+  border-collapse: collapse;
+  width: 100%;
+  }
+
+  #timetable th, #timetable td {
+    border: 1px solid #bebebe;
+    padding: 10px;
+    text-align: center;
+    width: 15%;
+  }
+
+  #timetable th {
+    background-color: #a3a3a3;
+  }
+
+  #timetable td{
+    position: relative;
+    background-color: #cecece62;
+    
+  }
+
+  .lesson {
+    background-color: #f7f7f7; 
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    display: inline-block;
+    width: 83%;
+    height: 100%;
+    left: 4%;
+    position: absolute;
+    font-size: small;
+    
+  }
+
+  .lesson::before {
+    content: attr(data-module);
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-size: small;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .overlap {
+    background-color: #f7f7f7; 
+    position: absolute;
+    /* top: 0; */
+    width : 83%;
+    left: 4%;
+    opacity: 0.6;
+    border-style: dashed;
+    z-index: 1; 
+  }
+
+  #time{
+    height: 3hv;
+  }
+
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+
+  .lesson-overlay {
+    display: block;
+    background-color: white;
+    position: relative;
+    text-align: center;
+    max-width: 25%;
+    max-height: 8%;
+    margin: 5px;
+    padding: 10px;
+  }
+
+  .edit-overlay {
+    display: block;
+    background-color: white;
+    position: relative;
+    text-align: center;
+    max-width: 30%;
+    max-height: 60%;
+    margin: 5px;
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .edit-lesson {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .form-group {
+    margin-bottom: 7px;
+  }
+  
+  .form-group label {
+    display: block;
+    font-size: 120%;
+    margin-bottom: 7px;
+  }
+  
+  .form-group input, select {
+    width: 100%;
+    padding: 6px;
+    border: none;
+    border-radius: 10px;
+    border: 2px solid #00d9e0; /* Turquoise border */
+  }
+  
+  .form-group input:focus, select:focus {
+    outline: none;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+  }
+  
+  .save-input {
+    background-color: #00d9e0;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  
+  .save-input:hover {
+    background-color: #16a085;
+  }
+
+  .duration-container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .duration-container select {
+    width: calc(50% - 10px);
+    margin: 0 5px;
+  }
+
+  
+  
+
+
+
+  

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Timetable Web App</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<table id="timetable">
+		<thead>
+		  <tr>
+			<th id = "time" style="width:8%">Time</th>
+			<th>Monday</th>
+			<th>Tuesday</th>
+			<th>Wednesday</th>
+			<th>Thursday</th>
+			<th>Friday</th>
+		  </tr>
+		</thead>
+		<tbody id="timetable-body">
+		  <!-- timetable rows will be generated dynamically -->
+		</tbody>
+	</table>
+
+	<div class="modal-overlay" id="modalOverlay" style = "display: none">
+        
+    </div>
+
+	<div class="modal-overlay" id = "editOverlay" style = "display: none">
+		<div class="lesson edit-overlay" style="border-color: purple;">
+			<form class="edit-lesson">
+			  <h2>Edit Lesson</h2>
+			  <div class="form-group">
+				<label for="name-input">Name:</label>
+				<input type="text" name="name-input" id="name-input" required>
+			  </div>
+
+			  <div class="form-group">
+				<label for="location-input">📍Location:</label>
+				<input type="text" name="location-input" id="location-input" required>
+			  </div>
+
+			  <div class="form-group">
+				<label for="activity-input">📖Activity:</label>
+				<select name="activity-input" id="activity-input" required>
+					<option value="T1">T1</option>
+					<option value="T2">T2</option>
+					<option value="T3">T3</option>
+					<option value="T4">T4</option>
+					<option value="T5">T5</option>
+					<option value="T6">T6</option>
+					<option value="T7">T7</option>
+					<option value="T8">T8</option>
+					<option value="L1">L1</option>
+					<option value="L2">L2</option>
+					<option value="L3">L3</option>
+					<option value="L4">L4</option>
+					<option value="L5">L5</option>
+					<option value="P1">P1</option>
+					<option value="P2">P2</option>
+					<option value="P3">P3</option>
+					<option value="P4">P4</option>
+					<option value="P5">P5</option>
+					<option value="D1">D1</option>
+					<option value="D2">D2</option>
+					<option value="D3">D3</option>
+					<option value="D4">D4</option>
+					<option value="B1">B1</option>
+					<option value="O1">O1</option>
+					<option value="O2">O2</option>
+				</select>
+			  </div>
+			  <div class="form-group">
+				<label for="day-input">Day:</label>
+				<select id="day-input" name="day-input" required>
+				  <option value="Monday">Monday</option>
+				  <option value="Tuesday">Tuesday</option>
+				  <option value="Wednesday">Wednesday</option>
+				  <option value="Thursday">Thursday</option>
+				  <option value="Friday">Friday</option>
+				</select>
+			  </div>
+			  <div class="form-group">
+				<label>⏰Duration:</label>
+				<div class="duration-container">
+				  <select name="start-input" id="start-input" required>
+					<!-- Add options for start time -->
+				  </select>
+				  <span>-</span>
+				  <select name="end-input" id="end-input" required>
+					<!-- Add options for end time -->
+				  </select>
+				</div>
+			  </div>
+			  <button class="save-input" id="save-input">Save Changes</button>
+			</form>
+		</div>
+	</div>
+
+    <script src = "index.js"></script>
+</body>
+</html>

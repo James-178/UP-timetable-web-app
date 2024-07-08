@@ -1,0 +1,167 @@
+
+body {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 40px auto;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    background-color: #eeeeee;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+label {
+    margin-bottom: 10px;
+}
+
+select {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.module-search{
+    width:50%;
+    height: 30px;
+}
+
+hr {
+    margin: 20px 0;
+    border: none;
+    border-bottom: 1px solid #ccc;
+}
+
+#module-list {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.module-card {
+    margin: 10px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    width: 100%;
+    text-align: center;
+}
+
+.module-card h3 {
+    margin-top: 0;
+}
+
+.remove-button {
+    background-color: #ff0000;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.dropdown {
+    margin-top: 10px;
+}
+
+#module-options {
+    display: block; /* or inline-block */
+    position: relative;
+    width: 47.5%;
+    background-color: #fff;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    z-index: 1; /* ensure it's on top of other elements */
+    max-height: 200px; /* add a max height */
+    overflow-y: auto; /* add scrolling */
+  }
+  
+  #module-options option {
+    width: 94%;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  #module-options option:hover {
+    background-color: #f2f2f2;
+  }
+  
+  /* optional: add a scrollbar style */
+  #module-options::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  #module-options::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 10px;
+  }
+
+  #selected-modules{
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 400px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    
+  }
+
+  #generate-timetable{
+    background-color: #ff6767;
+    width: 200px;
+    border-radius: 2px;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+
+  .module-container {
+    border: 1px solid #ddd;
+    width: 350px;
+    padding: 10px;
+    flex-basis: 40%;
+    margin: 10px;
+    background-color: white;
+  }
+  
+  .module-container h4 {
+    font-weight: bold;
+  }
+  
+  .module-container button {
+    background-color: #ff6767;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  
+  .module-container button:hover {
+    background-color: #ccc;
+  }
+  
+  .module-container p {
+    font-size: 14px;
+    color: #666;
+  }
+
+  .module-container select{
+    margin: 1%;
+  }
+
+  .notification-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+    z-index: 1000;
+  }
