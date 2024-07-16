@@ -92,6 +92,8 @@ function addClickListenerOnce(element, callback) {
 let removed = [];
 let filled = [];
 function renderLessons(allLessons) {
+    removed = [];
+    filled = [];
     const cells = document.querySelectorAll('#timetable-body .cell');
     console.log(cells);
     console.log(allLessons);
@@ -213,34 +215,14 @@ function renderLessons(allLessons) {
             const copiedDivs = Array.from(childDivs).map(div => div.cloneNode(true));
             console.log(copiedDivs);
             const overlay = document.getElementById("modalOverlay");
-            console.log(lesson);
+            
             copiedDivs.forEach(d => {
                 d.classList.remove("overlap");
                 d.style.removeProperty("top");
                 d.style.removeProperty("height");
                 d.classList.add("lesson-overlay");
                 d.addEventListener("click", () =>{
-                    const editOverlay = document.getElementById("editOverlay");
-                    editOverlay.style.display = 'flex';
-                    
-                    const moduleInp = document.getElementById("name-input");
-                    const locationInp = document.getElementById("location-input");
-                    const activityInp = document.getElementById("activity-input");
-                    const dayInp = document.getElementById("day-input");
-                    const startInp = document.getElementById("start-input");
-                    const endInp = document.getElementById("end-input");
-
-                    moduleInp.value = lesson.module;
-                    locationInp.value = lesson.venue;
-                    activityInp.value = lesson.activity;
-                    dayInp.value = lesson.day;
-                    startInp.value = lesson.start;
-                    endInp.value = lesson.end;
-
-                    const saveInp = document.getElementById("save-input");
-                    saveInp.addEventListener("click", () =>{
-                        
-                    });
+                    editLesson(lesson, allLessons);
                 });
                 overlay.appendChild(d);
             });
@@ -250,380 +232,450 @@ function renderLessons(allLessons) {
         //console.log(cells);
     });
 }
+
+function editLesson(lessonToEdit, allLessons) {
+    const editOverlay = document.getElementById("editOverlay");
+    editOverlay.style.display = 'flex';
+    
+    const moduleInp = document.getElementById("name-input");
+    const locationInp = document.getElementById("location-input");
+    const activityInp = document.getElementById("activity-input");
+    const dayInp = document.getElementById("day-input");
+    const startInp = document.getElementById("start-input");
+    const endInp = document.getElementById("end-input");
+
+    moduleInp.value = lessonToEdit.module;
+    locationInp.value = lessonToEdit.venue;
+    activityInp.value = lessonToEdit.activity;
+    dayInp.value = lessonToEdit.day;
+    startInp.value = lessonToEdit.start;
+    endInp.value = lessonToEdit.end;
+
+    const editForm = document.querySelector('.edit-lesson');
+    editForm.onsubmit = (event) => {
+        event.preventDefault();
+        
+        // Find the index of the lesson to edit in allLessons
+        const lessonIndex = allLessons.findIndex(lesson => 
+            lesson.module === lessonToEdit.module &&
+            lesson.venue === lessonToEdit.venue &&
+            lesson.activity === lessonToEdit.activity &&
+            lesson.day === lessonToEdit.day &&
+            lesson.start === lessonToEdit.start &&
+            lesson.end === lessonToEdit.end
+        );
+
+        if (lessonIndex !== -1) {
+            // Update the lesson with new values
+            allLessons[lessonIndex] = {
+                ...allLessons[lessonIndex], // Keep existing properties
+                module: moduleInp.value,
+                venue: locationInp.value,
+                activity: activityInp.value,
+                day: dayInp.value,
+                start: startInp.value,
+                end: endInp.value
+            };
+
+            // Close the edit overlay
+            editOverlay.style.display = 'none';
+
+            // Close the modal overlay
+            const modalOR = document.getElementById("modalOverlay");
+            modalOR.style.display = "none";
+            modalOR.innerHTML = "";
+
+            // Sort and save lessons
+            allLessons.sort((a, b) => a.start.localeCompare(b.start));
+            localStorage.setItem("allLessons", JSON.stringify(allLessons));
+            
+            console.log("Lesson updated:", allLessons[lessonIndex]);
+            console.log(allLessons);
+
+            // Regenerate timetable and re-render lessons
+            generateTimetable();
+            renderLessons(allLessons);
+        } else {
+            console.error("Lesson not found for editing");
+        }
+    };
+}
   
   // Initialize timetable
-  generateTimetable();
-  
+if(!localStorage.hasOwnProperty("allLessons")){
+    generateTimetable();
+    let storedModules = JSON.parse(localStorage.getItem('storedModules'));
 
-let storedModules = JSON.parse(localStorage.getItem('storedModules'));
-
-function halfHours(startTime, endTime){
-    const startMinutes = parseInt(startTime.split(":")[0]) * 60 + parseInt(startTime.split(":")[1]);
-    const endMinutes = parseInt(endTime.split(":")[0]) * 60 + parseInt(endTime.split(":")[1]);
-    const halfHours = (endMinutes - startMinutes) / 30;
-    return halfHours;
-}
-
-function getIndex(day, s){
-    const dayInd = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].indexOf(day);
-    const sTime = s.split(':');
-    const startHour = parseInt(sTime[0]);
-    const startMin = parseInt(sTime[1]);
-    return (startMin == 0) ? (dayInd + 10*(startHour - 7) - 5) : (dayInd + 10*(startHour - 7));    
-}
-
-const lessons2 = [];
-const lessons3D = [];
-let arr = new Array(115).fill(0);
-
-function incArr(a, startInd, number){
-    for (let i = 0; i < number; i++) {
-        a[startInd + i * 5]++;
-    }
-    return a;
-}
-
-// console.log(storedModules);
-Object.keys(storedModules).forEach(moduleCode => {
-    module = storedModules[moduleCode];
-    // console.log(module);
-    let lec = false;
-    let prac = false;
-    let tut = false;
-
-    module.lectureGroups == 0 ? lec = true : lec = false;
-    module.practicalGroups == 0 ? prac = true : prac = false;
-    module.tutorialGroups == 0 ? tut = true : tut = false;
-
-    if(module.lectureGroups == 1){
-        lec = true;
-        const lectures = module.groups.filter(group => group.activity.startsWith("L"));
-        lectures.forEach(lecture => {
-            const index = getIndex(lecture.day, lecture.start);
-            const num = halfHours(lecture.start, lecture.end);
-            arr = incArr(arr, index, num);
-            const lesson = lecture;
-            lesson.module = moduleCode;
-            lessons2.push(lesson);
-        });
+    function halfHours(startTime, endTime){
+        const startMinutes = parseInt(startTime.split(":")[0]) * 60 + parseInt(startTime.split(":")[1]);
+        const endMinutes = parseInt(endTime.split(":")[0]) * 60 + parseInt(endTime.split(":")[1]);
+        const halfHours = (endMinutes - startMinutes) / 30;
+        return halfHours;
     }
 
-    if(module.practicalGroups == 1){
-        prac = true;
-        const practicals = module.groups.filter(group => group.activity.startsWith("P"));
-        practicals.forEach(practical => {
-            const index = getIndex(practical.day, practical.start);
-            const num = halfHours(practical.start, practical.end);
-            arr = incArr(arr, index, num);
-            const lesson = practical;
-            lesson.module = moduleCode;
-            lessons2.push(lesson);
-        });
+    function getIndex(day, s){
+        const dayInd = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].indexOf(day);
+        const sTime = s.split(':');
+        const startHour = parseInt(sTime[0]);
+        const startMin = parseInt(sTime[1]);
+        return (startMin == 0) ? (dayInd + 10*(startHour - 7) - 5) : (dayInd + 10*(startHour - 7));    
     }
 
-    if(module.tutorialGroups == 1){
-        tut = true;
-        const tutorials = module.groups.filter(group => group.activity.startsWith("T"));
-        tutorials.forEach(tutorial => {
-            const index = getIndex(tutorial.day, tutorial.start);
-            const num = halfHours(tutorial.start, tutorial.end);
-            arr = incArr(arr, index, num);
-            const lesson = tutorial;
-            lesson.module = moduleCode;
-            lessons2.push(lesson);
-        });
+    const lessons2 = [];
+    const lessons3D = [];
+    let arr = new Array(115).fill(0);
+
+    function incArr(a, startInd, number){
+        for (let i = 0; i < number; i++) {
+            a[startInd + i * 5]++;
+        }
+        return a;
     }
 
-    if(!lec && module.preferredLectureGroup != "Any"){
-        lec = true;
-        const lectures = module.groups.filter(group => group.group.startsWith(module.preferredLectureGroup));
-        lectures.forEach(lecture => {
-            const index = getIndex(lecture.day, lecture.start);
-            const num = halfHours(lecture.start, lecture.end);
-            arr = incArr(arr, index, num);
-            const lesson = lecture;
-            lesson.module = moduleCode;
-            lessons2.push(lesson);
-        });
-    }
+    // console.log(storedModules);
+    Object.keys(storedModules).forEach(moduleCode => {
+        module = storedModules[moduleCode];
+        // console.log(module);
+        let lec = false;
+        let prac = false;
+        let tut = false;
 
-    if(!prac && module.preferredPracticalGroup != "Any"){
-        prac = true;
-        const practicals = module.groups.filter(group => group.group.startsWith(module.preferredPracticalGroup) && group.activity.startsWith("P"))
-        .reduce((acc, current) => {
-            const existingActivity = acc.find(activity => activity.activity === current.activity);
-            if (!existingActivity) {
-                acc.push(current);
-            }
-            return acc;
-        }, []);
-        practicals.forEach(practical => {
-            const index = getIndex(practical.day, practical.start);
-            const num = halfHours(practical.start, practical.end);
-            arr = incArr(arr, index, num);
-            const lesson = practical;
-            lesson.module = moduleCode;
-            lessons2.push(lesson);
-        })
-        
-    }
+        module.lectureGroups == 0 ? lec = true : lec = false;
+        module.practicalGroups == 0 ? prac = true : prac = false;
+        module.tutorialGroups == 0 ? tut = true : tut = false;
 
-    if(!tut && module.preferredTutorialGroup != "Any"){
-        tut = true;
-        const tutorials = module.groups.filter(group => group.group.startsWith(module.preferredTutorialGroup) && group.activity.startsWith("T"))
-        .reduce((acc, current) => {
-            const existingActivity = acc.find(activity => activity.activity === current.activity);
-            if (!existingActivity) {
-                acc.push(current);
-            }
-            return acc;
-        }, []);
-        tutorials.forEach(tutorial => {
-            const index = getIndex(tutorial.day, tutorial.start);
-            const num = halfHours(tutorial.start, tutorial.end);
-            arr = incArr(arr, index, num);
-            const lesson = tutorial;
-            lesson.module = moduleCode;
-            lessons2.push(lesson);
-        });
-        
-    }
-
-    const lecArr = [];
-    if(!lec){
-        const uniqueGroups = [...new Set(module.groups.map(group => group.group))];
-        uniqueGroups.forEach(groupName => {
-            const groupActivities = [];
-            const existingActivities = {};
-            module.groups.forEach(activity => {
-                if (activity.group === groupName && (groupName.startsWith("G") || activity.activity.startsWith("L")) && !activity.activity.startsWith("P") && !activity.activity.startsWith("T")) {
-                    const key = activity.activity;
-                    if (!existingActivities[key]) {
-                        existingActivities[key] = true;
-                        activity.module = moduleCode;
-                        groupActivities.push(activity);
-                    }
-                }
-            });
-            if(groupActivities.length !== 0){
-                lecArr.push(groupActivities);
-            }
-        });
-        // console.log("lecArr: ");
-        // console.log(lecArr);
-    }
-
-    const pracArr = [];
-    if(!prac){
-        const uniqueGroups = [...new Set(module.groups.map(group => group.group))];
-        uniqueGroups.forEach(groupName => {
-            const groupActivities = [];
-            const existingActivities = {};
-            module.groups.forEach(activity => {
-                if (activity.group === groupName && (groupName.startsWith("P") || activity.activity.startsWith("P"))) {
-                    const key = activity.activity;
-                    if (!existingActivities[key]) {
-                        existingActivities[key] = true;
-                        activity.module = moduleCode;
-                        groupActivities.push(activity);
-                    }
-                }
-            });
-            if(groupActivities.length !== 0){
-                pracArr.push(groupActivities);
-            }
-        });
-        // console.log("pracArr: ");
-        // console.log(pracArr);
-    }
-
-    const tutArr = [];
-    if(!tut){
-        const uniqueGroups = [...new Set(module.groups.map(group => group.group))];
-        uniqueGroups.forEach(groupName => {
-            const groupActivities = [];
-            const existingActivities = {};
-            module.groups.forEach(activity => {
-                if (activity.group === groupName && (groupName.startsWith("T") || activity.activity.startsWith("T"))) {
-                    const key = activity.activity;
-                    if (!existingActivities[key]) {
-                        existingActivities[key] = true;
-                        activity.module = moduleCode;
-                        groupActivities.push(activity);
-                    }
-                }
-            });
-            if(groupActivities.length !== 0){
-                tutArr.push(groupActivities);
-            }
-        });
-        // console.log("tut arr: ");
-        // console.log(tutArr);
-    }
-    
-    //create many timetables
-    let arrOfArrs = [];
-    let arrOfArrsCollitions = [];
-    let arrOfLessons = [];
-
-    if(lecArr.length !== 0){//lecture
-        lecArr.forEach(lectureGroup => {
-            let copiedArr = new Array(115).fill(0);
-            let less = [];
-            lectureGroup.forEach(lecture => {
+        if(module.lectureGroups == 1){
+            lec = true;
+            const lectures = module.groups.filter(group => group.activity.startsWith("L"));
+            lectures.forEach(lecture => {
                 const index = getIndex(lecture.day, lecture.start);
                 const num = halfHours(lecture.start, lecture.end);
-                copiedArr = incArr(copiedArr, index, num);
-                less.push(lecture);
+                arr = incArr(arr, index, num);
+                const lesson = lecture;
+                lesson.module = moduleCode;
+                lessons2.push(lesson);
             });
-            
-            if(pracArr.length !== 0){//lecture + prac
-                pracArr.forEach(practicalGroup => {
-                    let copiedArrPrac = [...copiedArr];
-                    let lessPrac = [...less];
-                    practicalGroup.forEach(practical => {
-                        const index = getIndex(practical.day, practical.start);
-                        const num = halfHours(practical.start, practical.end);
-                        copiedArrPrac = incArr(copiedArrPrac, index, num);
-                        lessPrac.push(practical);
-                    });
+        }
 
-                    if(tutArr.length !== 0){//lecture + prac + tut
-                        tutArr.forEach(tutorialGroup => {
-                            let copiedArrTut = [...copiedArrPrac];
-                            let lessTut = [...lessPrac];
-                            tutorialGroup.forEach(tutorial => {
-                                const index = getIndex(tutorial.day, tutorial.start);
-                                const num = halfHours(tutorial.start, tutorial.end);
-                                copiedArrTut = incArr(copiedArrTut, index, num);
-                                lessTut.push(tutorial);
-                            })
-                            arrOfLessons.push(lessTut);
-                            arrOfArrs.push(copiedArrTut);
-                        });
-                    }else{//lecture + prac + no tut
-                        arrOfLessons.push(lessPrac);
-                        arrOfArrs.push(copiedArrPrac);
-                    }
-                });
-            }else if(tutArr.length !== 0){//lecture + no prac + tut
-                tutArr.forEach(tutorialGroup => {
-                    let copiedArrTut = [...copiedArrPrac];
-                    let lessTut = [...lessPrac];
-                    tutorialGroup.forEach(tutorial => {
-                        const index = getIndex(tutorial.day, tutorial.start);
-                        const num = halfHours(tutorial.start, tutorial.end);
-                        copiedArrTut = incArr(copiedArrTut, index, num);
-                        lessTut.push(tutorial);
-                    })
-                    arrOfLessons.push(lessTut);
-                    arrOfArrs.push(copiedArrTut);
-                }); 
-            }else{//lecture + no prac + no tut
-                arrOfLessons.push(less);
-                arrOfArrs.push(copiedArr);
-            }
-        });
-    }else if(pracArr.length !== 0){//no lecture + prac
-        pracArr.forEach(practicalGroup => {
-            let copiedArrPrac = new Array(115).fill(0);
-            let lessPrac = [];
-            practicalGroup.forEach(practical => {
+        if(module.practicalGroups == 1){
+            prac = true;
+            const practicals = module.groups.filter(group => group.activity.startsWith("P"));
+            practicals.forEach(practical => {
                 const index = getIndex(practical.day, practical.start);
                 const num = halfHours(practical.start, practical.end);
-                copiedArrPrac = incArr(copiedArrPrac, index, num);
-                lessPrac.push(practical);
+                arr = incArr(arr, index, num);
+                const lesson = practical;
+                lesson.module = moduleCode;
+                lessons2.push(lesson);
             });
+        }
 
-            if(tutArr.length !== 0){//no lecture + prac + tut
-                tutArr.forEach(tutorialGroup => {
-                    let copiedArrTut = [...copiedArrPrac];
-                    let lessTut = [...lessPrac];
-                    tutorialGroup.forEach(tutorial => {
-                        const index = getIndex(tutorial.day, tutorial.start);
-                        const num = halfHours(tutorial.start, tutorial.end);
-                        copiedArrTut = incArr(copiedArrTut, index, num);
-                        lessTut.push(tutorial);
-                    })
-                    arrOfLessons.push(lessTut);
-                    arrOfArrs.push(copiedArrTut);
-                });
-            }else{//no lecture + prac + no tut
-                arrOfLessons.push(lessPrac);
-                arrOfArrs.push(copiedArrPrac);
-            }
-        });
-    }else if(tutArr.length !== 0){//no lecture + no prac + tut
-        tutArr.forEach(tutorialGroup => {
-            let copiedArrTut = new Array(115).fill(0);
-            let lessTut = [];
-            tutorialGroup.forEach(tutorial => {
+        if(module.tutorialGroups == 1){
+            tut = true;
+            const tutorials = module.groups.filter(group => group.activity.startsWith("T"));
+            tutorials.forEach(tutorial => {
                 const index = getIndex(tutorial.day, tutorial.start);
                 const num = halfHours(tutorial.start, tutorial.end);
-                copiedArrTut = incArr(copiedArrTut, index, num);
-                lessTut.push(tutorial);
+                arr = incArr(arr, index, num);
+                const lesson = tutorial;
+                lesson.module = moduleCode;
+                lessons2.push(lesson);
+            });
+        }
+
+        if(!lec && module.preferredLectureGroup != "Any"){
+            lec = true;
+            const lectures = module.groups.filter(group => group.group.startsWith(module.preferredLectureGroup));
+            lectures.forEach(lecture => {
+                const index = getIndex(lecture.day, lecture.start);
+                const num = halfHours(lecture.start, lecture.end);
+                arr = incArr(arr, index, num);
+                const lesson = lecture;
+                lesson.module = moduleCode;
+                lessons2.push(lesson);
+            });
+        }
+
+        if(!prac && module.preferredPracticalGroup != "Any"){
+            prac = true;
+            const practicals = module.groups.filter(group => group.group.startsWith(module.preferredPracticalGroup) && group.activity.startsWith("P"))
+            .reduce((acc, current) => {
+                const existingActivity = acc.find(activity => activity.activity === current.activity);
+                if (!existingActivity) {
+                    acc.push(current);
+                }
+                return acc;
+            }, []);
+            practicals.forEach(practical => {
+                const index = getIndex(practical.day, practical.start);
+                const num = halfHours(practical.start, practical.end);
+                arr = incArr(arr, index, num);
+                const lesson = practical;
+                lesson.module = moduleCode;
+                lessons2.push(lesson);
             })
-            arrOfLessons.push(lessTut);
-            arrOfArrs.push(copiedArrTut);
+            
+        }
+
+        if(!tut && module.preferredTutorialGroup != "Any"){
+            tut = true;
+            const tutorials = module.groups.filter(group => group.group.startsWith(module.preferredTutorialGroup) && group.activity.startsWith("T"))
+            .reduce((acc, current) => {
+                const existingActivity = acc.find(activity => activity.activity === current.activity);
+                if (!existingActivity) {
+                    acc.push(current);
+                }
+                return acc;
+            }, []);
+            tutorials.forEach(tutorial => {
+                const index = getIndex(tutorial.day, tutorial.start);
+                const num = halfHours(tutorial.start, tutorial.end);
+                arr = incArr(arr, index, num);
+                const lesson = tutorial;
+                lesson.module = moduleCode;
+                lessons2.push(lesson);
+            });
+            
+        }
+
+        const lecArr = [];
+        if(!lec){
+            const uniqueGroups = [...new Set(module.groups.map(group => group.group))];
+            uniqueGroups.forEach(groupName => {
+                const groupActivities = [];
+                const existingActivities = {};
+                module.groups.forEach(activity => {
+                    if (activity.group === groupName && (groupName.startsWith("G") || activity.activity.startsWith("L")) && !activity.activity.startsWith("P") && !activity.activity.startsWith("T")) {
+                        const key = activity.activity;
+                        if (!existingActivities[key]) {
+                            existingActivities[key] = true;
+                            activity.module = moduleCode;
+                            groupActivities.push(activity);
+                        }
+                    }
+                });
+                if(groupActivities.length !== 0){
+                    lecArr.push(groupActivities);
+                }
+            });
+            // console.log("lecArr: ");
+            // console.log(lecArr);
+        }
+
+        const pracArr = [];
+        if(!prac){
+            const uniqueGroups = [...new Set(module.groups.map(group => group.group))];
+            uniqueGroups.forEach(groupName => {
+                const groupActivities = [];
+                const existingActivities = {};
+                module.groups.forEach(activity => {
+                    if (activity.group === groupName && (groupName.startsWith("P") || activity.activity.startsWith("P"))) {
+                        const key = activity.activity;
+                        if (!existingActivities[key]) {
+                            existingActivities[key] = true;
+                            activity.module = moduleCode;
+                            groupActivities.push(activity);
+                        }
+                    }
+                });
+                if(groupActivities.length !== 0){
+                    pracArr.push(groupActivities);
+                }
+            });
+            // console.log("pracArr: ");
+            // console.log(pracArr);
+        }
+
+        const tutArr = [];
+        if(!tut){
+            const uniqueGroups = [...new Set(module.groups.map(group => group.group))];
+            uniqueGroups.forEach(groupName => {
+                const groupActivities = [];
+                const existingActivities = {};
+                module.groups.forEach(activity => {
+                    if (activity.group === groupName && (groupName.startsWith("T") || activity.activity.startsWith("T"))) {
+                        const key = activity.activity;
+                        if (!existingActivities[key]) {
+                            existingActivities[key] = true;
+                            activity.module = moduleCode;
+                            groupActivities.push(activity);
+                        }
+                    }
+                });
+                if(groupActivities.length !== 0){
+                    tutArr.push(groupActivities);
+                }
+            });
+            // console.log("tut arr: ");
+            // console.log(tutArr);
+        }
+        
+        //create many timetables
+        let arrOfArrs = [];
+        let arrOfArrsCollitions = [];
+        let arrOfLessons = [];
+
+        if(lecArr.length !== 0){//lecture
+            lecArr.forEach(lectureGroup => {
+                let copiedArr = new Array(115).fill(0);
+                let less = [];
+                lectureGroup.forEach(lecture => {
+                    const index = getIndex(lecture.day, lecture.start);
+                    const num = halfHours(lecture.start, lecture.end);
+                    copiedArr = incArr(copiedArr, index, num);
+                    less.push(lecture);
+                });
+                
+                if(pracArr.length !== 0){//lecture + prac
+                    pracArr.forEach(practicalGroup => {
+                        let copiedArrPrac = [...copiedArr];
+                        let lessPrac = [...less];
+                        practicalGroup.forEach(practical => {
+                            const index = getIndex(practical.day, practical.start);
+                            const num = halfHours(practical.start, practical.end);
+                            copiedArrPrac = incArr(copiedArrPrac, index, num);
+                            lessPrac.push(practical);
+                        });
+
+                        if(tutArr.length !== 0){//lecture + prac + tut
+                            tutArr.forEach(tutorialGroup => {
+                                let copiedArrTut = [...copiedArrPrac];
+                                let lessTut = [...lessPrac];
+                                tutorialGroup.forEach(tutorial => {
+                                    const index = getIndex(tutorial.day, tutorial.start);
+                                    const num = halfHours(tutorial.start, tutorial.end);
+                                    copiedArrTut = incArr(copiedArrTut, index, num);
+                                    lessTut.push(tutorial);
+                                })
+                                arrOfLessons.push(lessTut);
+                                arrOfArrs.push(copiedArrTut);
+                            });
+                        }else{//lecture + prac + no tut
+                            arrOfLessons.push(lessPrac);
+                            arrOfArrs.push(copiedArrPrac);
+                        }
+                    });
+                }else if(tutArr.length !== 0){//lecture + no prac + tut
+                    tutArr.forEach(tutorialGroup => {
+                        let copiedArrTut = [...copiedArrPrac];
+                        let lessTut = [...lessPrac];
+                        tutorialGroup.forEach(tutorial => {
+                            const index = getIndex(tutorial.day, tutorial.start);
+                            const num = halfHours(tutorial.start, tutorial.end);
+                            copiedArrTut = incArr(copiedArrTut, index, num);
+                            lessTut.push(tutorial);
+                        })
+                        arrOfLessons.push(lessTut);
+                        arrOfArrs.push(copiedArrTut);
+                    }); 
+                }else{//lecture + no prac + no tut
+                    arrOfLessons.push(less);
+                    arrOfArrs.push(copiedArr);
+                }
+            });
+        }else if(pracArr.length !== 0){//no lecture + prac
+            pracArr.forEach(practicalGroup => {
+                let copiedArrPrac = new Array(115).fill(0);
+                let lessPrac = [];
+                practicalGroup.forEach(practical => {
+                    const index = getIndex(practical.day, practical.start);
+                    const num = halfHours(practical.start, practical.end);
+                    copiedArrPrac = incArr(copiedArrPrac, index, num);
+                    lessPrac.push(practical);
+                });
+
+                if(tutArr.length !== 0){//no lecture + prac + tut
+                    tutArr.forEach(tutorialGroup => {
+                        let copiedArrTut = [...copiedArrPrac];
+                        let lessTut = [...lessPrac];
+                        tutorialGroup.forEach(tutorial => {
+                            const index = getIndex(tutorial.day, tutorial.start);
+                            const num = halfHours(tutorial.start, tutorial.end);
+                            copiedArrTut = incArr(copiedArrTut, index, num);
+                            lessTut.push(tutorial);
+                        })
+                        arrOfLessons.push(lessTut);
+                        arrOfArrs.push(copiedArrTut);
+                    });
+                }else{//no lecture + prac + no tut
+                    arrOfLessons.push(lessPrac);
+                    arrOfArrs.push(copiedArrPrac);
+                }
+            });
+        }else if(tutArr.length !== 0){//no lecture + no prac + tut
+            tutArr.forEach(tutorialGroup => {
+                let copiedArrTut = new Array(115).fill(0);
+                let lessTut = [];
+                tutorialGroup.forEach(tutorial => {
+                    const index = getIndex(tutorial.day, tutorial.start);
+                    const num = halfHours(tutorial.start, tutorial.end);
+                    copiedArrTut = incArr(copiedArrTut, index, num);
+                    lessTut.push(tutorial);
+                })
+                arrOfLessons.push(lessTut);
+                arrOfArrs.push(copiedArrTut);
+            });
+        }
+
+        // console.log("Array of lessons: ");
+        // console.log(arrOfLessons);
+        // console.log(arrOfArrs);
+        if(arrOfLessons.length !==0){
+            lessons3D.push(arrOfLessons);
+        }
+        
+        // console.log(lessons3D);
+    });
+
+    let s = 1;
+    if(lessons3D.length > 0){
+        lessons3D.forEach(mod =>{
+            s *= mod.length;
+            // console.log("length: "+ mod.length);
+        });
+        // console.log("s: "+ s);
+    }
+
+    let lesson3 = [...lessons2];
+    const allTimetables = new Array(s).fill(null).map(() => [...lesson3]);
+    if(lessons3D.length > 0){
+        lessons3D.forEach(modulesIn3D=>{
+            let itt = s/modulesIn3D.length;
+            // console.log(itt);
+            
+            for (let i = 0; i < s; i += modulesIn3D.length) {
+                let ind = 0;
+                modulesIn3D.forEach(lessonGroup=>{
+                    lessonGroup.forEach(l =>{s
+                        allTimetables[i + ind].push(l);
+                    });
+                    // console.log(i+ind);
+                    ind++; 
+                    
+                });
+                //console.log("i: "+ i);
+                // console.log(ind);
+            }
         });
     }
-
-    // console.log("Array of lessons: ");
-    // console.log(arrOfLessons);
-    // console.log(arrOfArrs);
-    if(arrOfLessons.length !==0){
-        lessons3D.push(arrOfLessons);
-    }
-    
-    // console.log(lessons3D);
-});
-
-let s = 1;
-if(lessons3D.length > 0){
-    lessons3D.forEach(mod =>{
-        s *= mod.length;
-        // console.log("length: "+ mod.length);
+    // console.log(allTimetables);
+    // console.log(arr);
+    lessons2.sort((a, b) => {
+        const startA = a.start;
+        const startB = b.start;
+        return startA.localeCompare(startB);
     });
-    // console.log("s: "+ s);
-}
-
-let lesson3 = [...lessons2];
-const allTimetables = new Array(s).fill(null).map(() => [...lesson3]);
-if(lessons3D.length > 0){
-    lessons3D.forEach(modulesIn3D=>{
-        let itt = s/modulesIn3D.length;
-        // console.log(itt);
-        
-        for (let i = 0; i < s; i += modulesIn3D.length) {
-            let ind = 0;
-            modulesIn3D.forEach(lessonGroup=>{
-                lessonGroup.forEach(l =>{s
-                    allTimetables[i + ind].push(l);
-                });
-                // console.log(i+ind);
-                ind++; 
-                
-            });
-            //console.log("i: "+ i);
-            // console.log(ind);
-        }
+    allTimetables[0].sort((a, b) => {
+        const startA = a.start;
+        const startB = b.start;
+        return startA.localeCompare(startB);
     });
+
+    // console.log(lessons2);
+
+    renderLessons(allTimetables[0]);
+}else{
+    generateTimetable();
+    renderLessons(JSON.parse(localStorage.getItem("allLessons")));
 }
-// console.log(allTimetables);
-// console.log(arr);
-lessons2.sort((a, b) => {
-    const startA = a.start;
-    const startB = b.start;
-    return startA.localeCompare(startB);
-});
-allTimetables[0].sort((a, b) => {
-    const startA = a.start;
-    const startB = b.start;
-    return startA.localeCompare(startB);
-});
-
-// console.log(lessons2);
-
-renderLessons(allTimetables[0]);
-
 

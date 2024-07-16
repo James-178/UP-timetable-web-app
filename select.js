@@ -379,7 +379,10 @@ fetch('TUKS_Modules.json')
 
     let generate = document.getElementById("generate-timetable");
     generate.addEventListener('click', () =>{
-      window.location.href = "index.html";
+        if(localStorage.hasOwnProperty("allLessons")){
+          localStorage.removeItem("allLessons");
+        }
+        window.location.href = "index.html";
     });
   });
 
